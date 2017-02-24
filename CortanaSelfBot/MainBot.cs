@@ -63,6 +63,18 @@ namespace CortanaSelfBot
                         await e.Message.Delete();
                     }
                 });
+            Discord.GetService<CommandService>().CreateCommand("game")
+            .Description("Changes current game. Note: Not visible to client")
+            .Alias("setgame")
+            .Parameter("game", ParameterType.Unparsed)
+            .Do(async (e) =>
+                {
+                    if (!String.IsNullOrEmpty(e.GetArg("game")))
+                    {
+                        Discord.SetGame(e.GetArg("game"));
+                        await e.Message.Edit($"Playing status set to `{e.GetArg("game")}`");
+                    }
+                });
             Discord.ExecuteAndWait(async () =>
             {
                 await Discord.Connect("MTY5OTE4OTkwMzEzODQ4ODMy.C4pDFQ.Lu9Jk7pRuLQtPrGWf4qMeMptOIM", TokenType.User);
