@@ -75,6 +75,30 @@ namespace CortanaSelfBot
                         await e.Message.Edit($"Playing status set to `{e.GetArg("game")}`");
                     }
                 });
+            Discord.GetService<CommandService>().CreateCommand("clear")
+            .Description("Clears `n` messages, limits to and defaults to 100")
+            .Parameter("number", ParameterType.Optional)
+            .Do(async (e) =>
+                {
+                    var count = Convert.ToInt32(e.GetArg("number"));
+                    if (String.IsNullOrEmpty(e.GetArg("number"))) count = 99;
+                    IEnumerable<Message> msgs;
+                    int deleted = 0;
+                    var cachedMsgs = e.Channel.Messages;
+                    if (cachedMsgs.Count() < count)
+                        msgs = (await e.Channel.DownloadMessages(count + 1));
+                    else
+                        msgs = e.Channel.Messages.OrderByDescending(x => x.Timestamp).Take(count + 1);
+                    foreach (var msg in msgs)
+                    {
+                        if (msg.IsAuthor)
+                        {
+                            await msg.Delete();
+                            deleted++;
+                        }
+                    }
+                    await e.Channel.SendMessage($"Deleted `{deleted}` messages");
+                });
             Discord.ExecuteAndWait(async () =>
             {
                 await Discord.Connect("MTY5OTE4OTkwMzEzODQ4ODMy.C4pDFQ.Lu9Jk7pRuLQtPrGWf4qMeMptOIM", TokenType.User);
