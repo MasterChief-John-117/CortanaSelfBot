@@ -99,6 +99,32 @@ namespace CortanaSelfBot
                     }
                     await e.Channel.SendMessage($"Deleted `{deleted}` messages");
                 });
+            Discord.GetService<CommandService>().CreateCommand("nuke")
+            .Description("Removes **ALL** messages up to and defaulting to 100, if user has `Manage Messages`")
+                .Parameter("number", ParameterType.Optional)
+                .Do(async (e) =>
+                {
+                    if (e.User.ServerPermissions.ManageMessages)
+                    {
+                        int count = 0;
+                        count = Convert.ToInt32(e.GetArg("number"));
+                        if (count < 1) count = 99;
+                        IEnumerable<Message> msgs;
+                        int deleted = 0;
+                        var cachedMsgs = e.Channel.Messages;
+                        if (cachedMsgs.Count() < count)
+                            msgs = (await e.Channel.DownloadMessages(count + 1));
+                        else
+                            msgs = e.Channel.Messages.OrderByDescending(x => x.Timestamp).Take(count + 1);
+                        foreach (var msg in msgs)
+                        {
+                            await msg.Delete();
+                            deleted++;
+                        }
+                        await e.Channel.SendMessage($"Deleted `{deleted}` messages");
+                    }
+                    else await e.Message.Edit("Sorry, I don't have permissions to delete messages here");
+                });
             Discord.ExecuteAndWait(async () =>
             {
                 await Discord.Connect("MTY5OTE4OTkwMzEzODQ4ODMy.C4pDFQ.Lu9Jk7pRuLQtPrGWf4qMeMptOIM", TokenType.User);
