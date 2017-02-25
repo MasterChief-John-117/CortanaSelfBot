@@ -79,11 +79,18 @@ namespace CortanaSelfBot
                 });
             Discord.GetService<CommandService>().CreateCommand("clear")
             .Description("Clears `n` messages, limits to and defaults to 100")
-            .Parameter("number", ParameterType.Optional)
+            .Parameter("number", ParameterType.Unparsed)
             .Do(async (e) =>
                 {
-                    var count = Convert.ToInt32(e.GetArg("number"));
-                    if (String.IsNullOrEmpty(e.GetArg("number"))) count = 99;
+                    int count;
+                    if (String.IsNullOrEmpty(e.GetArg("number")))
+                    {
+                        count = 99;
+                    }
+                    else
+                    {
+                        count = Convert.ToInt32(e.GetArg("number"));
+                    }
                     IEnumerable<Message> msgs;
                     int deleted = 0;
                     var cachedMsgs = e.Channel.Messages;
@@ -108,9 +115,15 @@ namespace CortanaSelfBot
                 {
                     if (e.User.ServerPermissions.ManageMessages)
                     {
-                        int count = 0;
-                        count = Convert.ToInt32(e.GetArg("number"));
-                        if (count < 1) count = 99;
+                        int count;
+                        if (String.IsNullOrEmpty(e.GetArg("number")))
+                        {
+                            count = 99;
+                        }
+                        else
+                        {
+                            count = Convert.ToInt32(e.GetArg("number"));
+                        }
                         IEnumerable<Message> msgs;
                         int deleted = 0;
                         var cachedMsgs = e.Channel.Messages;

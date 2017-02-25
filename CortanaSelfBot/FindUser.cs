@@ -1,16 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Discord;
 using Discord.Commands;
+using Newtonsoft.Json;
 
 namespace CortanaSelfBot
 {
     public class FindUser
     {
         public static Stopwatch Stopwatch = new Stopwatch();
+        public static Dictionary<ulong, string> allUs = new Dictionary<ulong, string>();
 
         public static string Global(string name, CommandEventArgs e)
         {
@@ -24,6 +27,7 @@ namespace CortanaSelfBot
             {
                 if (!String.IsNullOrEmpty(user.Nickname) && Regex.IsMatch(user.Nickname, rgx, RegexOptions.IgnoreCase))
                 {
+                    //allUs.Add(user.Id, user.Name);
                     Console.WriteLine(user.Name);
                     count++;
                     if (count < 25)
@@ -32,14 +36,17 @@ namespace CortanaSelfBot
                     }
                     ids.AddFirst(user.Id);
                 }
-                if(Regex.IsMatch(user.Name.ToLower(), rgx, RegexOptions.IgnoreCase) && !ids.Contains(user.Id))
+                else if(Regex.IsMatch(user.Name.ToLower(), rgx, RegexOptions.IgnoreCase) && !ids.Contains(user.Id))
                 {
+                    //allUs.Add(user.Id, user.Name);
                     Console.WriteLine(user.Name);
                     count++;
                     people += user.Name + " : " + user.Id.ToString() + "\n";
                     ids.AddFirst(user.Id);
                 }
             }
+            //if (!System.IO.File.Exists("AllUsers.json")) File.Create("AllUsers.json");
+            //File.WriteAllText("AllUsers.json", JsonConvert.SerializeObject(allUs));
             if (count > 20)
             {
                 Stopwatch.Stop();
