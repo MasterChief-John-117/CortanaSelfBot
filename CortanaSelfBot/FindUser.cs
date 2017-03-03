@@ -17,8 +17,9 @@ namespace CortanaSelfBot
 
         public static string Global(string name, CommandEventArgs e)
         {
+
             Stopwatch.Restart();
-            IEnumerable<User> users = e.Message.Client.Servers.SelectMany(s => s.Users);
+            IEnumerable<User> users = e.Message.Client.Servers.SelectMany(s => s.Users).OrderBy(s => s.Id);
             int count = 0;
             string people = "";
             string rgx = name;
@@ -27,26 +28,22 @@ namespace CortanaSelfBot
             {
                 if (!String.IsNullOrEmpty(user.Nickname) && Regex.IsMatch(user.Nickname, rgx, RegexOptions.IgnoreCase))
                 {
-                    //allUs.Add(user.Id, user.Name);
                     Console.WriteLine(user.Name);
                     count++;
                     if (count < 25)
                     {
-                        people += user.Name + " (" + user.Nickname + ") : " + user.Id.ToString() + "\n";
+                        people += user.Name + " (" + user.Nickname + ") : `" + user.Id.ToString() + "`\n";
                     }
                     ids.AddFirst(user.Id);
                 }
-                else if(Regex.IsMatch(user.Name.ToLower(), rgx, RegexOptions.IgnoreCase) && !ids.Contains(user.Id))
+                if(Regex.IsMatch(user.Name.ToLower(), rgx, RegexOptions.IgnoreCase) && !ids.Contains(user.Id))
                 {
-                    //allUs.Add(user.Id, user.Name);
                     Console.WriteLine(user.Name);
                     count++;
-                    people += user.Name + " : " + user.Id.ToString() + "\n";
+                    people += user.Name + " : `" + user.Id.ToString() + "`\n";
                     ids.AddFirst(user.Id);
                 }
             }
-            //if (!System.IO.File.Exists("AllUsers.json")) File.Create("AllUsers.json");
-            //File.WriteAllText("AllUsers.json", JsonConvert.SerializeObject(allUs));
             if (count > 20)
             {
                 Stopwatch.Stop();

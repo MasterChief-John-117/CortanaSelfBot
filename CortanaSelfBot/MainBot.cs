@@ -2,10 +2,14 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using ParameterType = Discord.Commands.ParameterType;
+using Newtonsoft;
+using Newtonsoft.Json;
+using RestSharp.Deserializers;
 
 namespace CortanaSelfBot
 {
@@ -14,6 +18,9 @@ namespace CortanaSelfBot
         public DiscordClient Discord;
         public String AwayReason;
         public bool Isaway;
+        private  static Random rand = new Random();
+
+        Dictionary<string, string> shortstring = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText("short.json"));
 
         public MainBot()
 
@@ -40,7 +47,28 @@ namespace CortanaSelfBot
                 {
                     await e.Message.Edit("Pong!");
                 });
+            Discord.GetService<CommandService>().CreateCommand("short")
+            .Parameter("req")
+            .Parameter("name", ParameterType.Optional)
+            .Parameter("input", ParameterType.Unparsed)
+            .Do(async (e) =>
+                {
+                    await e.Message.Edit($"Params: {e.GetArg("req")} : {e.GetArg("name")} : {e.GetArg("input")}");
+                    if (e.GetArg("req").Equals("add"))
+                    {
+                        shortstring.Add(e.GetArg("name"), e.GetArg("input"));
+                        Console.WriteLine($"added {e.GetArg("name")}, {e.GetArg("input")}");
+                        //File.WriteAllText("short.json", JsonConvert.SerializeObject(shortstring));
+                        await e.Message.Edit($"Done adding");
+                    }
+                    if (shortstring.ContainsKey(e.GetArg("req")))
+                    {
+                        Console.WriteLine($"requested {e.GetArg("string")}");
+                        await e.Message.Edit(shortstring[e.GetArg("string")]);
+                    }
+                    //await e.Message.Edit($"`{e.GetArg("req")}`");
 
+                });
             Discord.GetService<CommandService>().CreateCommand("ban")
             .Description("Uploads the VeraBan image")
             .Do(async (e) =>
@@ -106,17 +134,38 @@ namespace CortanaSelfBot
                             deleted++;
                         }
                     }
-                    await e.Channel.SendMessage($"Deleted `{deleted}` messages");
+                    Message msgsnt = await e.Channel.SendMessage($"Deleted `{deleted - 1}` messages");
+                    await Task.Delay(TimeSpan.FromSeconds(2));
+                    await msgsnt.Delete();
+
                 });
             Discord.GetService<CommandService>().CreateCommand("nuke")
             .Description("Removes **ALL** messages up to and defaulting to 100, if user has `Manage Messages`")
+                //.Parameter("code")
                 .Parameter("number", ParameterType.Optional)
                 .Do(async (e) =>
                 {
-                    if (e.User.ServerPermissions.ManageMessages)
+                    if (e.User.ServerPermissions.ManageMessages /* && e.GetArg("code") == nukey*/)
                     {
-                        int count;
-                        if (String.IsNullOrEmpty(e.GetArg("number")))
+                        IEnumerable<Message> msgs;
+                        int deleted = 0;
+                        var cachedMsgs = e.Channel.Messages;
+                        int count = 0;
+                        if (e.GetArg("number") == "total")
+                        {
+                            msgs = await e.Channel.DownloadMessages();
+                            while (msgs.Count() > 1)
+                            {
+                                cachedMsgs = e.Channel.Messages;
+                                foreach (var msg in msgs)
+                                {
+                                    await msg.Delete();
+                                    deleted++;
+                                }
+                                msgs = await e.Channel.DownloadMessages();
+                            }
+                        }
+                        else if (String.IsNullOrEmpty(e.GetArg("number")))
                         {
                             count = 99;
                         }
@@ -124,9 +173,8 @@ namespace CortanaSelfBot
                         {
                             count = Convert.ToInt32(e.GetArg("number"));
                         }
-                        IEnumerable<Message> msgs;
-                        int deleted = 0;
-                        var cachedMsgs = e.Channel.Messages;
+                        deleted = 0;
+                        cachedMsgs = e.Channel.Messages;
                         if (cachedMsgs.Count() < count)
                             msgs = (await e.Channel.DownloadMessages(count + 1));
                         else
@@ -136,9 +184,18 @@ namespace CortanaSelfBot
                             await msg.Delete();
                             deleted++;
                         }
-                        await e.Channel.SendMessage($"Deleted `{deleted}` messages");
+                        Message msgsnt = await e.Channel.SendMessage($"Deleted `{deleted - 1}` messages");
+                        await Task.Delay(TimeSpan.FromSeconds(2));
+                        await msgsnt.Delete();
                     }
-                    else await e.Message.Edit("Sorry, I don't have permissions to delete messages here");
+                    else if (!e.User.ServerPermissions.ManageMessages)
+                    {
+                        await e.Message.Edit("Sorry, I don't have permissions to delete messages here");
+                    }
+                    else
+                    {
+                        await e.Message.Edit("The key used is incorrect");
+                    }
                 });
             Discord.GetService<CommandService>().CreateCommand("away")
             .Description("Sets a reason for being away that is returned if the user is mentioned")
@@ -194,21 +251,36 @@ namespace CortanaSelfBot
                     string message = FindUser.Global(name, e);
                     await e.Message.Edit(message);
                 });
-
-
-            //For away status
-            Discord.MessageReceived += (async (s, m) =>
+        Discord.GetService<CommandService>().CreateCommand("eyes")
+            .Parameter("times", ParameterType.Optional)
+            .Do(async (e) =>
             {
-                if (Isaway && (m.Message.RawText.Contains(Discord.CurrentUser.Mention) ||
-                               m.Message.RawText.Contains(Discord.CurrentUser.NicknameMention)))
+                int times = Convert.ToInt32(e.GetArg("times"));
+                for (int i = times; i > 0; i--)
                 {
-                    await m.Message.Channel.SendMessage($"Sorry, I'm currently away! Reason: `{AwayReason}`");
+                    await e.Message.Edit("http://i.imgur.com/ySGyNE7.png");
+                    await Task.Delay(TimeSpan.FromSeconds(1));
+                    await e.Message.Edit("http://i.imgur.com/BFn1JJJ.png");
+                    await Task.Delay(TimeSpan.FromSeconds(1));
                 }
+
             });
+            /*Discord.GetService<CommandService>().CreateCommand("restart")
+            .Do(async (e) =>
+                {
+
+                });*/
+            Discord.GetService<CommandService>().CreateCommand("role")
+            .Parameter("name", ParameterType.Unparsed)
+            .Do(async (e) =>
+                {
+                    var role = e.Server.FindRoles(e.GetArg("name"), exactMatch:false).FirstOrDefault();
+                    await e.Message.Edit($"Provided role `{e.GetArg("name")}` best matches `{role.Name}`(`{role.Id}`)");
+                });
 
             Discord.ExecuteAndWait(async () =>
             {
-                await Discord.Connect("MTY5OTE4OTkwMzEzODQ4ODMy.C4pDFQ.Lu9Jk7pRuLQtPrGWf4qMeMptOIM", TokenType.User);
+                await Discord.Connect("mfa.RYMMRQDvNsbghV9QfwKcLlKsGtRlFetOY3_zHDCISCaHlEs2yLFFQWCQbE8nBx5rgb83HI9Pw4hjSJKGVXi3", TokenType.User);
             });
         }
 
@@ -230,6 +302,11 @@ namespace CortanaSelfBot
             if (letter == '8') return ":eight:";
             if (letter == '9') return ":nine:";
             return "";
+        }
+
+        private static string getkey()
+        {
+            return rand.Next(10000, 99999).ToString();
         }
     }
 }
