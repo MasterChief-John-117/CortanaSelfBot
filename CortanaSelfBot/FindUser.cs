@@ -22,6 +22,7 @@ namespace CortanaSelfBot
             IEnumerable<User> users = e.Message.Client.Servers.SelectMany(s => s.Users).OrderBy(s => s.Id);
             int count = 0;
             string people = "";
+            LinkedList<string> names = new LinkedList<string>();
             string rgx = name;
             LinkedList<ulong> ids = new LinkedList<ulong>();
             foreach (User user in users)
@@ -30,24 +31,19 @@ namespace CortanaSelfBot
                 {
                     Console.WriteLine(user.Name);
                     count++;
-                    if (count < 25)
+                    if (count < 25 && !names.Contains(user.Name))
                     {
+                        names.AddFirst(user.Name);
                         people += user.Name + " (" + user.Nickname + ") : `" + user.Id.ToString() + "`\n";
                     }
-                    ids.AddFirst(user.Id);
-                }
-                if(Regex.IsMatch(user.Name.ToLower(), rgx, RegexOptions.IgnoreCase) && !ids.Contains(user.Id))
-                {
-                    Console.WriteLine(user.Name);
-                    count++;
-                    people += user.Name + " : `" + user.Id.ToString() + "`\n";
                     ids.AddFirst(user.Id);
                 }
             }
             if (count > 20)
             {
                 Stopwatch.Stop();
-                return $"I found `{count}` users! Please use more strict parameters.. :sweat_smile: (Search took `{Stopwatch.ElapsedMilliseconds}`ms)";
+                return
+                    $"I found `{count}` users! Please use more strict parameters.. :sweat_smile: (Search took `{Stopwatch.ElapsedMilliseconds}`ms)";
             }
             else if (count >= 1 && count <= 20)
             {
