@@ -293,7 +293,7 @@ namespace CortanaSelfBot
 
             Discord.ExecuteAndWait(async () =>
             {
-                await Discord.Connect("mfa.RYMMRQDvNsbghV9QfwKcLlKsGtRlFetOY3_zHDCISCaHlEs2yLFFQWCQbE8nBx5rgb83HI9Pw4hjSJKGVXi3", TokenType.User);
+                await Discord.Connect(File.ReadAllText("token.txt"), TokenType.User);
             });
         }
 
