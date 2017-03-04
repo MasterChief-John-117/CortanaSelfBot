@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.NetworkInformation;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord;
@@ -45,7 +47,18 @@ namespace CortanaSelfBot
             .Description("Just used to check if the bot is up")
             .Do(async (e) =>
                 {
-                    await e.Message.Edit("Pong!");
+                    Ping pingSender = new Ping ();
+                    PingOptions options = new PingOptions ();
+                    options.DontFragment = true;
+
+                    string data = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+                    byte[] buffer = Encoding.ASCII.GetBytes (data);
+                    int timeout = 120;
+                    PingReply reply = pingSender.Send("discord.gg", timeout, buffer, options);
+                    if (reply.Status == IPStatus.Success)
+                    {
+                        await e.Message.Edit("Pong! Command took `" + reply.RoundtripTime + "` ms");
+                    }
                 });
             Discord.GetService<CommandService>().CreateCommand("short")
             .Parameter("req")
