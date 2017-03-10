@@ -38,6 +38,17 @@ namespace CortanaSelfBot
                     }
                     ids.AddFirst(user.Id);
                 }
+                if (!String.IsNullOrEmpty(user.Name) && Regex.IsMatch(user.Name, rgx, RegexOptions.IgnoreCase))
+                {
+                    Console.WriteLine(user.Name);
+                    count++;
+                    if (count < 25 && !names.Contains(user.Name))
+                    {
+                        names.AddFirst(user.Name);
+                        people += user.Name + ": `" + user.Id.ToString() + "`\n";
+                    }
+                    ids.AddFirst(user.Id);
+                }
             }
             if (count > 20)
             {

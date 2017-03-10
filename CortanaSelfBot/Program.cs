@@ -7,9 +7,9 @@ namespace CortanaSelfBot
     {
         public static void Main(string[] args)
         {
-            if (!File.Exists("short.json"))
+            if (!File.Exists("notes.json"))
             {
-                File.Create("short.json");
+                File.Create("notes.json");
             }
             var mainBot = new MainBot();
         }
