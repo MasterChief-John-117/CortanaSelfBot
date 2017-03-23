@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 ﻿using System;
+=======
+using System;
+>>>>>>> origin/master
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
