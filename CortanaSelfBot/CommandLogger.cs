@@ -45,7 +45,7 @@ namespace CortanaSelfBot
             try
             {
                 var cmd = new CommandLogger(e.Message);
-                Console.WriteLine(cmd.hash);
+                //Console.WriteLine(cmd.hash);
                 string alreadyin = File.ReadAllText("log.json");
                 File.WriteAllText("log.json", JsonConvert.SerializeObject(cmd, Formatting.Indented) + "\n");
                 File.AppendAllText("log.json", alreadyin);

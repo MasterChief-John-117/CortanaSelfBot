@@ -24,11 +24,13 @@ namespace CortanaSelfBot
 
         Dictionary<string, string> notes;
         Dictionary<string, string> shortstring;
+        public Dictionary<ulong, string> redusers;
 
         public MainBot()
         {
             notes = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText("notes.json"));
             shortstring = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText("short.json"));
+            redusers = JsonConvert.DeserializeObject<Dictionary<ulong, string>>(File.ReadAllText("UserEvents/redlist.json"));
 
 
             try{foreach (KeyValuePair<string, string> kvp in notes)
@@ -482,13 +484,24 @@ namespace CortanaSelfBot
             .Do(async (e) =>
                 {
                     var role = e.Server.FindRoles(e.GetArg("name"), exactMatch:false).FirstOrDefault();
-                    await e.Message.Edit($"Provided role `{e.GetArg("name")}` best matches `{role.Name}`(`{role.Id}`)");
+                    await e.Message.Edit($"Provided role `{e.GetArg("name")}` best matches `{role.Name}`(`{role.Id}`)"+
+                                         $"\nMembers: {role.Members.Count()} \nColor: {role.Color}");
                     CommandLogger.log(e);
                 });
 
-            Discord.ExecuteAndWait(async () =>
+
+
+            Discord.UserJoined += (async (s, u) =>
             {
-                await Discord.Connect(File.ReadAllText("token.txt"), TokenType.User);
+                if (redusers.ContainsKey(u.User.Id)) Console.WriteLine(DateTime.Now + " {0} {1} joined {2} : Warning because {3}",
+                    u.User.Name, u.User.Id, u.Server.Name, redusers[u.User.Id]);
+                //for testing Console.WriteLine(DateTime.Now + " {0} is boring", u.User.Name);
+            });
+
+
+            Discord.ExecuteAndWait(async () =>{
+                await Discord.Connect(File.ReadAllText("token.txt").Trim('"'), TokenType.User);
+
             });
         }
 
