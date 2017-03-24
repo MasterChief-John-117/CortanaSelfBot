@@ -13,6 +13,7 @@ using Discord;
 using Discord.Commands;
 using ParameterType = Discord.Commands.ParameterType;
 using Newtonsoft.Json;
+using Message = Discord.Message;
 
 
 namespace CortanaSelfBot
@@ -34,12 +35,13 @@ namespace CortanaSelfBot
             notes = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText("notes.json"));
             shortstring = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText("short.json"));
             redusers = JsonConvert.DeserializeObject<Dictionary<ulong, string>>(File.ReadAllText("UserEvents/redlist.json"));
+            messageCache = new Dictionary<ulong, Message>();
 
 
 
             Discord = new DiscordClient(x =>
             {
-                x.LogLevel = LogSeverity.Error;
+                x.LogLevel = LogSeverity.Verbose;
                 x.LogHandler = Log;
             });
 
@@ -387,7 +389,8 @@ namespace CortanaSelfBot
                     {
                         await e.Message.Delete();
                         Process.Start("CortanaSelfBot.exe");
-                    await Discord.Disconnect();
+                        Application.Exit();
+                        await Discord.Disconnect();
                         CommandLogger.log(e);
                 });
             Discord.GetService<CommandService>().CreateCommand("getcommand")
@@ -434,7 +437,15 @@ namespace CortanaSelfBot
             Discord.MessageReceived += (async (s, m) =>
             {
                 messageCache.Add(m.Message.Id, m.Message);
-                if (messageCache.Count % 100 == 0) Console.WriteLine($"{messageCache.Count} messages in cache");
+                if (messageCache.Count > 1000) messageCache.Remove(messageCache.Keys.First());
+                Console.WriteLine($"{messageCache.Count} messages in cache");
+            });
+            Discord.MessageUpdated += (async (s, m) =>
+            {
+                messageCache.Remove(m.After.Id);
+                messageCache.Add(m.After.Id, m.After);
+                if (messageCache.Count > 1000) messageCache.Remove(messageCache.Keys.First());
+                Console.WriteLine($"{messageCache.Count} messages in cache");
             });
 
             Discord.ExecuteAndWait(async () =>{
