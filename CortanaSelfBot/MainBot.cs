@@ -1,12 +1,10 @@
-<<<<<<< HEAD
-﻿using System;
-=======
 using System;
->>>>>>> origin/master
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Windows.Forms;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
@@ -29,6 +27,7 @@ namespace CortanaSelfBot
         Dictionary<string, string> notes;
         Dictionary<string, string> shortstring;
         public Dictionary<ulong, string> redusers;
+        public Dictionary<ulong, Discord.Message> messageCache;
 
         public MainBot()
         {
@@ -37,16 +36,7 @@ namespace CortanaSelfBot
             redusers = JsonConvert.DeserializeObject<Dictionary<ulong, string>>(File.ReadAllText("UserEvents/redlist.json"));
 
 
-            try{foreach (KeyValuePair<string, string> kvp in notes)
-            {
-                Console.WriteLine(kvp.Key + " : " + kvp.Value);
-            }}
-            catch(Exception ex){Console.WriteLine(ex.Message);}
-            try{foreach (KeyValuePair<string, string> kvp in shortstring)
-            {
-                Console.WriteLine(kvp.Key + " : " + kvp.Value);
-            }}
-            catch(Exception ex){Console.WriteLine(ex.Message);}
+
             Discord = new DiscordClient(x =>
             {
                 x.LogLevel = LogSeverity.Error;
@@ -130,7 +120,7 @@ namespace CortanaSelfBot
                     {
                         count = Convert.ToInt32(e.GetArg("number"));
                     }
-                    IEnumerable<Message> msgs;
+                    IEnumerable<Discord.Message> msgs;
                     int deleted = 0;
                     var cachedMsgs = e.Channel.Messages;
                     if (cachedMsgs.Count() < count)
@@ -145,63 +135,9 @@ namespace CortanaSelfBot
                             deleted++;
                         }
                     }
-                    Message msgsnt = await e.Channel.SendMessage($"Deleted `{deleted - 1}` messages");
+                    Discord.Message msgsnt = await e.Channel.SendMessage($"Deleted `{deleted - 1}` messages");
                     await Task.Delay(TimeSpan.FromSeconds(2));
                     await msgsnt.Delete();
-                    CommandLogger.log(e);
-                });
-            Discord.GetService<CommandService>().CreateCommand("nuke")
-            .Description("Removes **ALL** messages up to and defaulting to 100, if user has `Manage Messages`")
-                .Parameter("number", ParameterType.Optional)
-                .Do(async (e) =>
-                {
-                    if (e.User.ServerPermissions.ManageMessages)
-                    {
-                        IEnumerable<Message> msgs;
-                        int deleted = 0;
-                        var cachedMsgs = e.Channel.Messages;
-                        int count = 0;
-                        if (e.GetArg("number") == "total")
-                        {
-                            msgs = await e.Channel.DownloadMessages();
-                            while (msgs.Count() > 1)
-                            {
-                                cachedMsgs = e.Channel.Messages;
-                                foreach (var msg in msgs)
-                                {
-                                    await msg.Delete();
-                                    deleted++;
-                                }
-                                msgs = await e.Channel.DownloadMessages();
-                            }
-                        }
-                        else if (String.IsNullOrEmpty(e.GetArg("number")))
-                        {
-                            count = 99;
-                        }
-                        else
-                        {
-                            count = Convert.ToInt32(e.GetArg("number"));
-                        }
-                        deleted = 0;
-                        cachedMsgs = e.Channel.Messages;
-                        if (cachedMsgs.Count() < count)
-                            msgs = (await e.Channel.DownloadMessages(count + 1));
-                        else
-                            msgs = e.Channel.Messages.OrderByDescending(x => x.Timestamp).Take(count + 1);
-                        foreach (var msg in msgs)
-                        {
-                            await msg.Delete();
-                            deleted++;
-                        }
-                        Message msgsnt = await e.Channel.SendMessage($"Deleted `{deleted - 1}` messages");
-                        await Task.Delay(TimeSpan.FromSeconds(2));
-                        await msgsnt.Delete();
-                    }
-                    else if (!e.User.ServerPermissions.ManageMessages)
-                    {
-                        await e.Message.Edit("Sorry, I don't have permissions to delete messages here");
-                    }
                     CommandLogger.log(e);
                 });
             Discord.GetService<CommandService>().CreateCommand("away")
@@ -446,22 +382,7 @@ namespace CortanaSelfBot
                     await e.Channel.SendMessage(msg);
                     CommandLogger.log(e);
                 });
-            Discord.GetService<CommandService>().CreateCommand("del")
-            .Parameter("time")
-            .Parameter("message", ParameterType.Unparsed)
-            .Do(
-                async (e) =>
-                {
-                    await e.Message.Delete();
-                    //double tf = Convert.ToDouble(e.GetArg("time"));
-                    string message = e.GetArg("messgage");
-                    Message msgsnt = await e.Message.Channel.SendMessage("beep");
-                    //await Task.Delay(TimeSpan.FromSeconds(2));
-                    //await msgsnt.Delete();
-                    CommandLogger.log(e);
-
-                });
-                Discord.GetService<CommandService>().CreateCommand("restart")
+            Discord.GetService<CommandService>().CreateCommand("restart")
                 .Do(async (e) =>
                     {
                         await e.Message.Delete();
@@ -497,11 +418,24 @@ namespace CortanaSelfBot
 
             Discord.UserJoined += (async (s, u) =>
             {
-                if (redusers.ContainsKey(u.User.Id)) Console.WriteLine(DateTime.Now + " {0} {1} joined {2} : Warning because {3}",
-                    u.User.Name, u.User.Id, u.Server.Name, redusers[u.User.Id]);
-                //for testing Console.WriteLine(DateTime.Now + " {0} is boring", u.User.Name);
+                if (redusers.ContainsKey(u.User.Id))
+                    Console.WriteLine(DateTime.Now + " {0} {1} joined {2} : Warning because {3}",
+                        u.User.Name, u.User.Id, u.Server.Name, redusers[u.User.Id]);
+                if (redusers.ContainsKey(u.User.Id))
+                    MessageBox.Show(DateTime.Now + $" {u.User.Name} {u.User.Id} joined " +
+                                    $"{u.Server.Name} : Warning because {redusers[u.User.Id]}",
+                        "DANGEROUS USER WARNING!!!                                                                                                                  " +
+                        "");
             });
 
+
+
+
+            Discord.MessageReceived += (async (s, m) =>
+            {
+                messageCache.Add(m.Message.Id, m.Message);
+                if (messageCache.Count % 100 == 0) Console.WriteLine($"{messageCache.Count} messages in cache");
+            });
 
             Discord.ExecuteAndWait(async () =>{
                 await Discord.Connect(File.ReadAllText("token.txt").Trim('"'), TokenType.User);

@@ -1,5 +1,6 @@
 ﻿
 using System.IO;
+using Discord.Commands.Permissions.Userlist;
 
 namespace CortanaSelfBot
 {
@@ -11,7 +12,10 @@ namespace CortanaSelfBot
             {
                 File.Create("notes.json");
             }
-            var mainBot = new MainBot();
+            while (true)
+            {
+                var mainBot = new MainBot();
+            }
         }
     }
 }
