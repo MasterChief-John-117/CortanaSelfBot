@@ -24,6 +24,7 @@ namespace CortanaSelfBot
         public String AwayReason;
         public bool Isaway;
         private  static Random rand = new Random();
+        private string[] logServers = File.ReadAllLines("logServers.txt");
 
         Dictionary<string, string> notes;
         Dictionary<string, string> shortstring;
@@ -35,7 +36,17 @@ namespace CortanaSelfBot
             notes = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText("notes.json"));
             shortstring = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText("short.json"));
             redusers = JsonConvert.DeserializeObject<Dictionary<ulong, string>>(File.ReadAllText("UserEvents/redlist.json"));
+            int cacheSize;
             messageCache = new Dictionary<ulong, Message>();
+            try
+            {
+                cacheSize = Convert.ToInt32(File.ReadAllLines("token.txt")[1].Trim());
+            }
+            catch(Exception ex)
+            {
+                cacheSize = 1000;
+            }
+            Console.WriteLine("Cache Size = " + cacheSize);
 
 
 
@@ -436,27 +447,85 @@ namespace CortanaSelfBot
 
             Discord.MessageReceived += (async (s, m) =>
             {
+                if (messageCache.Count > cacheSize)
+                {
+                    messageCache.Remove(messageCache.Min(x => x.Key));
+                }
+
                 messageCache.Add(m.Message.Id, m.Message);
-                if (messageCache.Count > 1000) messageCache.Remove(messageCache.Keys.First());
-                Console.WriteLine($"{messageCache.Count} messages in cache");
+
+                if (messageCache.Count % 50 == 0)
+                {
+                    Console.WriteLine($"{messageCache.Count} messages in cache");
+                    TimeSpan thisMessage = TimeSpan.FromMilliseconds(
+                        ((messageCache.Max(x => x.Key) / 4194304) + 1420070400000) + 62135596800000);
+                    TimeSpan firstMessage =
+                        TimeSpan.FromMilliseconds(((messageCache.Min(x => x.Key) / 4194304) + 1420070400000) +
+                                                  62135596800000);
+                    var messageAge = thisMessage - firstMessage;
+
+                    Console.WriteLine("Cache age: " + messageAge);
+                }
+
             });
             Discord.MessageUpdated += (async (s, m) =>
             {
+                if (messageCache.Count > cacheSize)
+                {
+                    messageCache.Remove(messageCache.Min(x => x.Key));
+                }
                 messageCache.Remove(m.After.Id);
                 messageCache.Add(m.After.Id, m.After);
-                if (messageCache.Count > 1000) messageCache.Remove(messageCache.Keys.First());
-                Console.WriteLine($"{messageCache.Count} messages in cache");
+
+                if (messageCache.Count % 50 == 0)
+                {
+                    Console.WriteLine($"{messageCache.Count} messages in cache");
+                    TimeSpan thisMessage = TimeSpan.FromMilliseconds(
+                        ((messageCache.Max(x => x.Key) / 4194304) + 1420070400000) + 62135596800000);
+                    TimeSpan firstMessage =
+                        TimeSpan.FromMilliseconds(((messageCache.Min(x => x.Key) / 4194304) + 1420070400000) +
+                                                  62135596800000);
+                    var messageAge = thisMessage - firstMessage;
+
+                    Console.WriteLine("Cache age: " + messageAge);
+                }
+
+            });
+            Discord.MessageUpdated += (async (s, m) =>
+            {
+                if (logServers.Contains(m.Server.Id.ToString()) && m.Before.RawText != m.After.RawText)
+                {
+                    Console.WriteLine("---------MESSAGE EDITED------------");
+                    Console.WriteLine(m.Server.Name + " " + m.Channel.Name);
+                    try{Console.WriteLine(m.User.Name + m.User.Id);}
+                    catch(Exception ex){Console.WriteLine("User not found");}
+                    Console.WriteLine(m.Before.RawText);
+                    Console.WriteLine(m.After.RawText);
+                }
+            });
+            Discord.MessageDeleted += (async (s, m) =>
+            {
+                if (m.Channel.IsPrivate || logServers.Contains(m.Server.Id.ToString()))
+                {
+                    Console.WriteLine("---------MESSAGE DELETED------------");
+                    try{Console.WriteLine(m.Server.Name + " " + m.Channel.Name);}
+                    catch (Exception ex){Console.WriteLine("PM: " + m.Channel.Name);}
+                    try{Message thisMsg = messageCache[m.Message.Id];
+                        Console.WriteLine(thisMsg.User.Name + thisMsg.User.Id);}
+                    catch(Exception ex){Console.WriteLine("User not found");}
+                    Console.WriteLine(m.Message.RawText);
+                }
             });
 
             Discord.ExecuteAndWait(async () =>{
-                await Discord.Connect(File.ReadAllText("token.txt").Trim('"'), TokenType.User);
+                await Discord.Connect(File.ReadAllLines("token.txt")[0].Trim('"'), TokenType.User);
 
             });
         }
 
         public void Log(object sender, LogMessageEventArgs e)
         {
-            Console.WriteLine(DateTime.Now + ": " + e.Message);
+            if (e.Message.Contains("CHUNK")) Console.WriteLine(DateTime.Now + ": " + e.Message);
         }
 
         public string ToWord(char letter)
