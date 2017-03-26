@@ -427,6 +427,21 @@ namespace CortanaSelfBot
                                          $"\nMembers: {role.Members.Count()} \nColor: {role.Color}");
                     CommandLogger.log(e);
                 });
+            Discord.GetService<CommandService>()
+                .CreateCommand("clap")
+                .Parameter("text", ParameterType.Unparsed)
+                .Do(async (e) =>
+                {
+                    await e.Message.Delete();
+                    char[] textar = e.GetArg("text").Trim().ToCharArray();
+                    string text = "";
+                    foreach (char chr in textar)
+                    {
+                        if (chr == ' ') text += " :clap: ";
+                        else text += chr;
+                    }
+                    await e.Channel.SendMessage(text);
+                });
 
 
 
