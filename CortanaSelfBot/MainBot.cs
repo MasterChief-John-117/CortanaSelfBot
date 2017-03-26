@@ -11,9 +11,9 @@ using System.Threading.Tasks;
 using System.Web.Security;
 using Discord;
 using Discord.Commands;
+using Message = Discord.Message;
 using ParameterType = Discord.Commands.ParameterType;
 using Newtonsoft.Json;
-using Message = Discord.Message;
 
 
 namespace CortanaSelfBot
@@ -454,7 +454,8 @@ namespace CortanaSelfBot
                                                       62135596800000);
                         var messageAge = thisMessage - firstMessage;
 
-                        await e.Message.Edit($"Max cache size: `{cacheSize}`\n`{messageCache.Count}` messages in cache \nCache age: " + messageAge);
+                        await e.Message.Edit($"Max cache size: `{cacheSize}`\n`{messageCache.Count}` messages in cache " +
+                                             $"\nCache age: {messageAge}");
 
                     });
                 cgb.CreateCommand("clear")
@@ -530,19 +531,6 @@ namespace CortanaSelfBot
                 messageCache.Remove(m.After.Id);
                 messageCache.Add(m.After.Id, m.After);
 
-                if (messageCache.Count % 50 == 0)
-                {
-                    Console.WriteLine($"{messageCache.Count} messages in cache");
-                    TimeSpan thisMessage = TimeSpan.FromMilliseconds(
-                        ((messageCache.Max(x => x.Key) / 4194304) + 1420070400000) + 62135596800000);
-                    TimeSpan firstMessage =
-                        TimeSpan.FromMilliseconds(((messageCache.Min(x => x.Key) / 4194304) + 1420070400000) +
-                                                  62135596800000);
-                    var messageAge = thisMessage - firstMessage;
-
-                    Console.WriteLine("Cache age: " + messageAge);
-                }
-
             });
             Discord.MessageUpdated += (async (s, m) =>
             {
@@ -580,6 +568,7 @@ namespace CortanaSelfBot
         public void Log(object sender, LogMessageEventArgs e)
         {
             if (e.Message.Contains("CHUNK")) Console.WriteLine(DateTime.Now + ": " + e.Message);
+            if (e.Message.ToLower().Contains("connect")) Console.WriteLine(DateTime.Now + ": " + e.Message);
         }
 
         public string ToWord(char letter)
