@@ -442,7 +442,36 @@ namespace CortanaSelfBot
                     }
                     await e.Channel.SendMessage(text);
                 });
+            Discord.GetService<CommandService>().CreateGroup("cache", cgb =>
+            {
+                cgb.CreateCommand("info")
+                .Do(async (e) =>
+                    {
+                        TimeSpan thisMessage = TimeSpan.FromMilliseconds(
+                            ((messageCache.Max(x => x.Key) / 4194304) + 1420070400000) + 62135596800000);
+                        TimeSpan firstMessage =
+                            TimeSpan.FromMilliseconds(((messageCache.Min(x => x.Key) / 4194304) + 1420070400000) +
+                                                      62135596800000);
+                        var messageAge = thisMessage - firstMessage;
 
+                        await e.Message.Edit($"Max cache size: `{cacheSize}`\n`{messageCache.Count}` messages in cache \nCache age: " + messageAge);
+
+                    });
+                cgb.CreateCommand("clear")
+                .Do(async (e) =>
+                    {
+                        await e.Message.Edit($"Clearing {messageCache.Count} messages from cache");
+                        messageCache.Clear();
+                    });
+                cgb.CreateCommand("size")
+                .Parameter("size")
+                .Do(async (e) =>
+                    {
+                        int oldSize = cacheSize;
+                        cacheSize = Convert.ToInt32(e.GetArg("size"));
+                        await e.Message.Edit($"Cache size changed from `{oldSize}` to `{cacheSize}`");
+                    });
+            });
 
 
             Discord.UserJoined += (async (s, u) =>
@@ -462,7 +491,7 @@ namespace CortanaSelfBot
 
             Discord.MessageReceived += (async (s, m) =>
             {
-                if (messageCache.Count > cacheSize)
+                while(messageCache.Count > cacheSize)
                 {
                     messageCache.Remove(messageCache.Min(x => x.Key));
                 }
@@ -471,16 +500,25 @@ namespace CortanaSelfBot
 
                 if (messageCache.Count % 50 == 0)
                 {
-                    Console.WriteLine($"{messageCache.Count} messages in cache");
-                    TimeSpan thisMessage = TimeSpan.FromMilliseconds(
-                        ((messageCache.Max(x => x.Key) / 4194304) + 1420070400000) + 62135596800000);
-                    TimeSpan firstMessage =
-                        TimeSpan.FromMilliseconds(((messageCache.Min(x => x.Key) / 4194304) + 1420070400000) +
-                                                  62135596800000);
-                    var messageAge = thisMessage - firstMessage;
+                    var sortedDict = from entry in messageCache orderby entry.Key ascending select entry;
 
-                    Console.WriteLine("Cache age: " + messageAge);
+                    string outmsg = "";
+                    foreach (var msg in sortedDict)
+                    {
+                        try{outmsg += msg.Value.User.Id + " : " + msg.Value.User.Name + "\n";}
+                        catch (Exception ex){outmsg += "Unknown User";}
+                        try{outmsg += (msg.Value.Server.Id + " : " + msg.Value.Server.Name) + "\n";
+                            outmsg += (msg.Value.Channel.Id + " : " + msg.Value.Channel.Name) + "\n";}
+                        catch (Exception ex){outmsg += ("PM: " + msg.Value.Channel.Name) + "\n";}
+                        outmsg += msg.Value.Timestamp + "\n";
+                        outmsg += msg.Value.Id + " : " +  msg.Value.Text + "\n";
+                        outmsg += "------------------------------------------------------\n";
+                        try{File.WriteAllText("msglog.txt", outmsg);}
+                        catch (Exception ex){}
+
+                    }
                 }
+
 
             });
             Discord.MessageUpdated += (async (s, m) =>
@@ -508,10 +546,11 @@ namespace CortanaSelfBot
             });
             Discord.MessageUpdated += (async (s, m) =>
             {
-                if (logServers.Contains(m.Server.Id.ToString()) && m.Before.RawText != m.After.RawText)
+                if ((m.Channel.IsPrivate ||logServers.Contains(m.Server.Id.ToString())) && m.Before.RawText != m.After.RawText)
                 {
                     Console.WriteLine("---------MESSAGE EDITED------------");
-                    Console.WriteLine(m.Server.Name + " " + m.Channel.Name);
+                    try{Console.WriteLine(m.Server.Name + " " + m.Channel.Name);}
+                    catch (Exception ex){Console.WriteLine("PM: " + m.Channel.Name);}
                     try{Console.WriteLine(m.User.Name + m.User.Id);}
                     catch(Exception ex){Console.WriteLine("User not found");}
                     Console.WriteLine(m.Before.RawText);
