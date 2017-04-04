@@ -21,6 +21,7 @@ namespace CortanaSelfBot
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex.StackTrace);
                 MessageBox.Show(ex.Message);
                 Process.Start("CortanaSelfBot.exe");
                 Application.Exit();

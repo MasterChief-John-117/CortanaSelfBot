@@ -77,12 +77,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CommandLogger.cs" />
+    <Compile Include="Config.cs" />
     <Compile Include="FindUser.cs" />
     <Compile Include="MainBot.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="UserData.cs" />
+    <Compile Include="Utilities.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config" />
