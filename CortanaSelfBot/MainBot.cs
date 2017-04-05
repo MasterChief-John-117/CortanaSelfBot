@@ -32,11 +32,18 @@ namespace CortanaSelfBot
 
         Utilities util = new Utilities();
         Config config = new Config();
+
+
+        private string[] logServers = File.ReadAllLines("logServers.txt");
+        public Dictionary<ulong, Discord.Message> messageCache;
+
         public MainBot()
         {
             notes = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText("notes.json"));
             shortstring = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText("short.json"));
 
+            messageCache = new Dictionary<ulong, Message>();
+            int cachesize = config.CacheSize();
 
 
             Discord = new DiscordClient(x =>
@@ -55,8 +62,8 @@ namespace CortanaSelfBot
 
 
             Discord.GetService<CommandService>().CreateCommand("ping")
-            .Description("Just used to check if the bot is up")
-            .Do(async (e) =>
+                .Description("Just used to check if the bot is up")
+                .Do(async (e) =>
                 {
                     TimeSpan ptime = e.Message.Timestamp.ToUniversalTime() - DateTime.UtcNow;
                     /*var then = e.Message.Timestamp.ToUniversalTime();
@@ -74,10 +81,10 @@ namespace CortanaSelfBot
                     await e.Channel.SendFile("img\\ban.png");
                 });*/
             Discord.GetService<CommandService>().CreateCommand("img")
-            .Alias("image")
-            .Description("Tries to upload an image given the name from bot's img folder")
-            .Parameter("name")
-            .Do(async (e) =>
+                .Alias("image")
+                .Description("Tries to upload an image given the name from bot's img folder")
+                .Parameter("name")
+                .Do(async (e) =>
                 {
                     await e.Message.Delete();
                     if (File.Exists($"img\\{e.GetArg("name")}"))
@@ -92,10 +99,10 @@ namespace CortanaSelfBot
                     }
                 });
             Discord.GetService<CommandService>().CreateCommand("game")
-            .Description("Changes current game. Note: Not visible to client")
-            .Alias("setgame")
-            .Parameter("game", ParameterType.Unparsed)
-            .Do(async (e) =>
+                .Description("Changes current game. Note: Not visible to client")
+                .Alias("setgame")
+                .Parameter("game", ParameterType.Unparsed)
+                .Do(async (e) =>
                 {
                     if (!String.IsNullOrEmpty(e.GetArg("game")))
                     {
@@ -104,10 +111,10 @@ namespace CortanaSelfBot
                     }
                 });
             Discord.GetService<CommandService>().CreateCommand("clear")
-            .Alias("c")
-            .Description("Clears `n` messages, limited to and defaulting to 100")
-            .Parameter("number", ParameterType.Unparsed)
-            .Do(async (e) =>
+                .Alias("c")
+                .Description("Clears `n` messages, limited to and defaulting to 100")
+                .Parameter("number", ParameterType.Unparsed)
+                .Do(async (e) =>
                 {
                     int count;
                     if (String.IsNullOrEmpty(e.GetArg("number")))
@@ -138,10 +145,10 @@ namespace CortanaSelfBot
                     await msgsnt.Delete();
                 });
             Discord.GetService<CommandService>().CreateCommand("emoji")
-            .Alias("e")
-            .Description("Converts input text to emoji")
-            .Parameter("text", ParameterType.Unparsed)
-            .Do(async (e) =>
+                .Alias("e")
+                .Description("Converts input text to emoji")
+                .Parameter("text", ParameterType.Unparsed)
+                .Do(async (e) =>
                 {
                     string message = "";
                     char[] input = e.GetArg("text").ToCharArray();
@@ -164,10 +171,10 @@ namespace CortanaSelfBot
                     await e.Message.Edit(message);
                 });
             Discord.GetService<CommandService>().CreateCommand("find")
-            .Alias("f")
-            .Description("Find a user's ID from name or nick")
-            .Parameter("name", ParameterType.Unparsed)
-            .Do(async (e) =>
+                .Alias("f")
+                .Description("Find a user's ID from name or nick")
+                .Parameter("name", ParameterType.Unparsed)
+                .Do(async (e) =>
                 {
                     string name = e.GetArg("name");
                     string message = FindUser.Global(name, e);
@@ -175,8 +182,8 @@ namespace CortanaSelfBot
                 });
             Discord.GetService<CommandService>()
                 .CreateCommand("user")
-            .Description("Returns detailed info about a user from their ID or Mention")
-            .Alias("u")
+                .Description("Returns detailed info about a user from their ID or Mention")
+                .Alias("u")
                 .Parameter("id")
                 .Do(async (e) =>
                 {
@@ -218,8 +225,8 @@ namespace CortanaSelfBot
                     await e.Message.Edit(message);
                 });
             Discord.GetService<CommandService>().CreateCommand("server")
-            .Description("Returns information on the server the command is used in")
-            .Do(async (e) =>
+                .Description("Returns information on the server the command is used in")
+                .Do(async (e) =>
                 {
                     Server srv = e.Server;
                     string message = "```\n";
@@ -247,9 +254,9 @@ namespace CortanaSelfBot
                 .CreateGroup("note", cgb =>
                 {
                     cgb.CreateCommand("add")
-                    .Parameter("uid")
-                    .Parameter("note", ParameterType.Unparsed)
-                    .Do(async (e) =>
+                        .Parameter("uid")
+                        .Parameter("note", ParameterType.Unparsed)
+                        .Do(async (e) =>
                         {
                             string uid = e.GetArg("uid");
                             string note = e.GetArg("note");
@@ -273,7 +280,7 @@ namespace CortanaSelfBot
                         {
                             string uid = e.GetArg("uid");
                             if (notes.ContainsKey(uid))
-                            notes.Remove(uid);
+                                notes.Remove(uid);
                             File.WriteAllText("notes.json", JsonConvert.SerializeObject(notes, Formatting.Indented));
                             await e.Message.Edit("Note Successfully removed");
                         });
@@ -293,8 +300,8 @@ namespace CortanaSelfBot
 
                 });*/
             Discord.GetService<CommandService>().CreateCommand("short")
-            .Description("Allows user to store strings and use them at a later date")
-            .Alias("s")
+                .Description("Allows user to store strings and use them at a later date")
+                .Alias("s")
                 .Parameter("req")
                 .Parameter("name", ParameterType.Optional)
                 .Parameter("input", ParameterType.Unparsed)
@@ -345,7 +352,7 @@ namespace CortanaSelfBot
                 });
             Discord.GetService<CommandService>()
                 .CreateCommand("max")
-            .Description("Just don't. Sends the input with the last character repeated to the 2k character limit.")
+                .Description("Just don't. Sends the input with the last character repeated to the 2k character limit.")
                 .Parameter("msg", ParameterType.Unparsed)
                 .Do(async (e) =>
                 {
@@ -359,16 +366,16 @@ namespace CortanaSelfBot
                 });
             Discord.GetService<CommandService>().CreateCommand("restart")
                 .Do(async (e) =>
-                    {
-                        await e.Message.Delete();
-                        Process.Start("CortanaSelfBot.exe");
-                        Application.Exit();
-                        await Discord.Disconnect();
+                {
+                    await e.Message.Delete();
+                    Process.Start("CortanaSelfBot.exe");
+                    Application.Exit();
+                    await Discord.Disconnect();
                 });
             Discord.GetService<CommandService>().CreateCommand("role")
-            .Description("attempts to return info for a given role")
-            .Parameter("name", ParameterType.Unparsed)
-            .Do(async (e) =>
+                .Description("attempts to return info for a given role")
+                .Parameter("name", ParameterType.Unparsed)
+                .Do(async (e) =>
                 {
                     var role = e.Server.FindRoles(e.GetArg("name"), exactMatch:false).FirstOrDefault();
                     await e.Message.Edit($"Provided role `{e.GetArg("name")}` best matches `{role.Name}`(`{role.Id}`)"+
@@ -376,7 +383,7 @@ namespace CortanaSelfBot
                 });
             Discord.GetService<CommandService>()
                 .CreateCommand("clap")
-            .Description("Adds claps into spaces from text")
+                .Description("Adds claps into spaces from text")
                 .Parameter("text", ParameterType.Unparsed)
                 .Do(async (e) =>
                 {
@@ -392,8 +399,8 @@ namespace CortanaSelfBot
                 });
 
             Discord.GetService<CommandService>().CreateCommand("google")
-            .Description("Helps you google a phrase for someone")
-            .Parameter("phrase", ParameterType.Unparsed)
+                .Description("Helps you google a phrase for someone")
+                .Parameter("phrase", ParameterType.Unparsed)
                 .Do(async (e) =>
                 {
                     char[] phrase = e.GetArg("phrase").Trim().ToCharArray();
@@ -409,7 +416,7 @@ namespace CortanaSelfBot
                     await e.Message.Edit($"Your result for `{e.GetArg("phrase")}`: {msg}");
                 });
             Discord.GetService<CommandService>().CreateCommand("steal")
-            .Description("Takes a user's avatar and sets it as your own")
+                .Description("Takes a user's avatar and sets it as your own")
                 .Parameter("shrug") //because I need a parameter for this to work, but it's never used. ¯\_(ツ)_/¯
                 .Do(async (e) =>
                 {
@@ -426,10 +433,199 @@ namespace CortanaSelfBot
                         stream.Close();
                         stream.Dispose();
                     }
+                    File.Delete($"temp/{u.AvatarId}.png");
                 });
+
+            Discord.GetService<CommandService>().CreateCommand("Avatar")
+                            .Description("Gets an avatar from a URL")
+                            .Parameter("url") //because I need a parameter for this to work, but it's never used. ¯\_(ツ)_/¯
+                            .Do(async (e) =>
+                            {
+                                await e.Message.Delete();
+                                Directory.CreateDirectory("temp");
+                                using (var client = new WebClient())
+                                {
+                                    client.DownloadFile(e.GetArg("url"), $"temp/Avatar.png");
+                                }
+                                using (System.IO.Stream stream = new System.IO.FileStream($"temp/Avatar.png", System.IO.FileMode.Open, System.IO.FileAccess.Read))
+                                {
+                                    await e.Message.Client.CurrentUser.Edit(avatar: stream, avatarType: ImageType.Png);
+                                    stream.Close();
+                                    stream.Dispose();
+                                }
+                                File.Delete($"temp/Avatar.png");
+                            });
+
+
+
+            Discord.GetService<CommandService>().CreateGroup("cache", cgb =>
+            {
+                cgb.CreateCommand("info")
+                    .Do(async (e) =>
+                    {
+                        TimeSpan thisMessage = TimeSpan.FromMilliseconds(
+                            ((messageCache.Max(x => x.Key) / 4194304) + 1420070400000) + 62135596800000);
+                        TimeSpan firstMessage =
+                            TimeSpan.FromMilliseconds(((messageCache.Min(x => x.Key) / 4194304) + 1420070400000) +
+                                                      62135596800000);
+                        var messageAge = thisMessage - firstMessage;
+
+                        await e.Message.Edit($"Max cache size: `{cachesize}`\n`{messageCache.Count}` messages in cache " +
+                                             $"\nCache age: {messageAge}");
+
+                    });
+                cgb.CreateCommand("clear")
+                    .Do(async (e) =>
+                    {
+                        await e.Message.Edit($"Clearing {messageCache.Count} messages from cache");
+                        messageCache.Clear();
+                    });
+                cgb.CreateCommand("size")
+                    .Parameter("size")
+                    .Do(async (e) =>
+                    {
+                        int oldSize = cachesize;
+                        cachesize = Convert.ToInt32(e.GetArg("size"));
+                        await e.Message.Edit($"Cache size changed from `{oldSize}` to `{cachesize}`");
+                    });
+            });
+
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+            Discord.MessageReceived += (async (s, m) =>
+            {
+                try
+                {
+                    TimeSpan thisMessage = TimeSpan.FromMilliseconds(
+                        ((messageCache.Max(x => x.Key) / 4194304) + 1420070400000) + 62135596800000);
+                    TimeSpan firstMessage =
+                        TimeSpan.FromMilliseconds(((messageCache.Min(x => x.Key) / 4194304) + 1420070400000) +
+                                                  62135596800000);
+                    var messageAge = thisMessage - firstMessage;
+                    double minuteAge = messageAge.TotalSeconds;
+                    while (minuteAge > cachesize * 60)
+                    {
+                        messageCache.Remove(messageCache.Min(x => x.Key));
+                        thisMessage = TimeSpan.FromMilliseconds(
+                            ((messageCache.Max(x => x.Key) / 4194304) + 1420070400000) + 62135596800000);
+                        firstMessage =
+                            TimeSpan.FromMilliseconds(((messageCache.Min(x => x.Key) / 4194304) + 1420070400000) +
+                                                      62135596800000);
+                        messageAge = thisMessage - firstMessage;
+                        minuteAge = messageAge.TotalSeconds;
+                    }
+                }
+                catch (Exception ex)
+                {
+                }
+
+                messageCache.Add(m.Message.Id, m.Message);
+
+            });
+            Discord.MessageUpdated += (async (s, m) =>
+            {
+                try
+                {
+                    TimeSpan thisMessage = TimeSpan.FromMilliseconds(
+                        ((messageCache.Max(x => x.Key) / 4194304) + 1420070400000) + 62135596800000);
+                    TimeSpan firstMessage =
+                        TimeSpan.FromMilliseconds(((messageCache.Min(x => x.Key) / 4194304) + 1420070400000) +
+                                                  62135596800000);
+                    var messageAge = thisMessage - firstMessage;
+                    double minuteAge = messageAge.TotalSeconds;
+                    while (minuteAge > cachesize * 60)
+                    {
+                        thisMessage = TimeSpan.FromMilliseconds(
+                            ((messageCache.Max(x => x.Key) / 4194304) + 1420070400000) + 62135596800000);
+                        firstMessage =
+                            TimeSpan.FromMilliseconds(((messageCache.Min(x => x.Key) / 4194304) + 1420070400000) +
+                                                      62135596800000);
+                        messageAge = thisMessage - firstMessage;
+                        minuteAge = messageAge.TotalSeconds;
+                        messageCache.Remove(messageCache.Min(x => x.Key));
+                    }
+                }
+                catch (Exception ex)
+                {
+                }
+                messageCache.Remove(m.After.Id);
+                messageCache.Add(m.After.Id, m.After);
+
+            });
+            Discord.MessageUpdated += (async (s, m) =>
+            {
+                try
+                {
+                    if ((m.Channel.IsPrivate || logServers.Contains(m.Server.Id.ToString()))
+                        && m.Before.RawText != m.After.RawText
+                        && !m.User.IsBot)
+                    {
+                        Console.WriteLine("---------MESSAGE EDITED------------");
+                        try
+                        {
+                            Console.WriteLine(m.Server.Name + " " + m.Channel.Name);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("PM: " + m.Channel.Name);
+                        }
+                        try
+                        {
+                            Console.WriteLine(m.User.Name + m.User.Id);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("User not found");
+                        }
+                        Console.WriteLine(m.Before.RawText);
+                        Console.WriteLine(m.After.RawText);
+                    }
+                }
+                catch (Exception ex)
+                {
+                }
+            });
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+            Discord.MessageDeleted += (async (s, m) =>
+            {
+                try
+                {
+                    if (m.Channel.IsPrivate || logServers.Contains(m.Server.Id.ToString())
+                        && !m.User.IsBot)
+                    {
+                        Console.WriteLine("---------MESSAGE DELETED------------");
+                        try
+                        {
+                            Console.WriteLine(m.Server.Name + " " + m.Channel.Name);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("PM: " + m.Channel.Name);
+                        }
+                        try
+                        {
+                            Message thisMsg = messageCache[m.Message.Id];
+                            Console.WriteLine(thisMsg.User.Name + thisMsg.User.Id);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("User not found");
+                        }
+                        Console.WriteLine(m.Message.RawText);
+                    }
+                }
+                catch (Exception ex)
+                {
+                }
+            });
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+
+
+
 
             Discord.ExecuteAndWait(async () =>{
                 await Discord.Connect(config.Token(), TokenType.User);
+                await Task.Delay(1000);
 
             });
         }
