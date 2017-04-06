@@ -487,7 +487,7 @@ namespace CortanaSelfBot
                                                   62135596800000);
                     var messageAge = thisMessage - firstMessage;
                     double minuteAge = messageAge.TotalSeconds;
-                    while (minuteAge > cachesize * 60)
+                    while (minuteAge > cachesize * 60 || messageCache > 5000)
                     {
                         messageCache.Remove(messageCache.Min(x => x.Key));
                         thisMessage = TimeSpan.FromMilliseconds(
@@ -517,7 +517,7 @@ namespace CortanaSelfBot
                                                   62135596800000);
                     var messageAge = thisMessage - firstMessage;
                     double minuteAge = messageAge.TotalSeconds;
-                    while (minuteAge > cachesize * 60)
+                    while (minuteAge > cachesize * 60 || messageCache.Count() > 5000)
                     {
                         thisMessage = TimeSpan.FromMilliseconds(
                             ((messageCache.Max(x => x.Key) / 4194304) + 1420070400000) + 62135596800000);
