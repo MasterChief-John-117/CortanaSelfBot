@@ -16,7 +16,6 @@ namespace CortanaSelfBot
 
         public int CacheSize()
         {
-            Console.WriteLine(Convert.ToInt32(File.ReadAllLines("config.txt")[2].Substring(10).Trim().Trim('"').Trim()));
             return Convert.ToInt32(File.ReadAllLines("config.txt")[2].Substring(10).Trim().Trim('"').Trim());
         }
     }

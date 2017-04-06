@@ -24,7 +24,7 @@ namespace CortanaSelfBot
         public DiscordClient Discord;
         public String AwayReason;
         public bool Isaway;
-        private  static Random rand = new Random();
+        private static Random rand = new Random();
 
         Dictionary<string, string> notes;
         Dictionary<string, string> shortstring;
@@ -73,13 +73,6 @@ namespace CortanaSelfBot
                     await e.Channel.SendMessage($"Message time: `{then}`, Time Now: `{now}`");*/
                     await e.Message.Edit($"Pong! It took `{ptime.TotalMilliseconds}`ms for the command to reach me");
                 });
-            /*Discord.GetService<CommandService>().CreateCommand("ban")
-            .Description("Uploads the VeraBan image")
-            .Do(async (e) =>
-                {
-                    await e.Message.Delete();
-                    await e.Channel.SendFile("img\\ban.png");
-                });*/
             Discord.GetService<CommandService>().CreateCommand("img")
                 .Alias("image")
                 .Description("Tries to upload an image given the name from bot's img folder")
@@ -99,8 +92,8 @@ namespace CortanaSelfBot
                     }
                 });
             Discord.GetService<CommandService>().CreateCommand("game")
+				.Alias("setgame")
                 .Description("Changes current game. Note: Not visible to client")
-                .Alias("setgame")
                 .Parameter("game", ParameterType.Unparsed)
                 .Do(async (e) =>
                 {
@@ -167,6 +160,7 @@ namespace CortanaSelfBot
                         {
                             message += ToWord(letter);
                         }
+                        message += "͏";
                     }
                     await e.Message.Edit(message);
                 });
@@ -180,32 +174,30 @@ namespace CortanaSelfBot
                     string message = FindUser.Global(name, e);
                     await e.Message.Edit(message);
                 });
-            Discord.GetService<CommandService>()
-                .CreateCommand("user")
+            Discord.GetService<CommandService>().CreateCommand("user")
                 .Description("Returns detailed info about a user from their ID or Mention")
                 .Alias("u")
                 .Parameter("id")
                 .Do(async (e) =>
                 {
-                    var id = Convert.ToUInt64(e.GetArg("id"));
                     string allroles = "";
                     User user = util.GetUsers(e).FirstOrDefault();
-                    bool onServer = e.Server.FindUsers(user.Name).Any();
-                    if (onServer)
+                    bool userIsOnServer = e.Server.FindUsers(user.Name).Any();
+                    if (userIsOnServer)
                     {
-                        var roles = e.Server.Users.FirstOrDefault(u => u.Id == id).Roles;
+                        var roles = e.Server.Users.FirstOrDefault(u => u.Id == user.Id).Roles;
                         foreach (var role in roles)
                         {
                             allroles += role.Name + ", ";
                         }
-                        allroles = allroles.Substring(0, allroles.Length - 13);
+                        allroles = allroles.Substring(0, allroles.Length - 13); //trims out "@everyone"
                     }
                     else allroles = "Not On Server";
                     TimeSpan userCreatedAt = TimeSpan.FromMilliseconds(((id / 4194304) + 1420070400000) + 62135596800000);
                     DateTime zero = new DateTime(0001, 01, 01, 00, 00, 00, 00);
                     var newUser = zero + userCreatedAt;
-                    string discrim = user.Discriminator.ToString();
-                    while (discrim.Length < 4) {discrim = "0" + discrim;}
+                    string discrim = "0000" + user.Discriminator.ToString();
+					discrim = discrim.Substring(discrim.Length - 4); 
 
 
                     string message = $"```UserName: {user.Name}#{discrim}\n";
@@ -218,9 +210,9 @@ namespace CortanaSelfBot
                     message += $"User Roles: {allroles}\n";
                     if (notes.ContainsKey(user.Id.ToString()))
                         message += $"User Notes: {notes[user.Id.ToString()].Trim()}\n";
-                    if(message.Length < 1900)
+                    if (message.Length < 1900)
                         message += $"User Avatar: {user.AvatarUrl}";
-                    if (message.Length > 1995) message = message.Substring(0, 1995);
+                    if (message.Length > 19990) message = message.Substring(0, 1990);
                     message += "\n```";
                     await e.Message.Edit(message);
                 });
@@ -231,9 +223,9 @@ namespace CortanaSelfBot
                     Server srv = e.Server;
                     string message = "```\n";
                     var features = srv.Features.Any();
-                    string discrim = srv.Owner.Discriminator.ToString();
-                    while (discrim.Length < 4) {discrim = "0" + discrim;}
-                    TimeSpan srvCreatedAt = TimeSpan.FromMilliseconds(((srv.Id / 4194304) + 1420070400000) + 62135596800000);
+                    string discrim = "0000" + user.Discriminator.ToString();
+					discrim = discrim.Substring(discrim.Length - 4); 
+					TimeSpan srvCreatedAt = TimeSpan.FromMilliseconds(((srv.Id / 4194304) + 1420070400000) + 62135596800000);
                     DateTime zero = new DateTime(0001, 01, 01, 00, 00, 00, 00);
                     var serverDate = zero + srvCreatedAt;
 
@@ -285,20 +277,6 @@ namespace CortanaSelfBot
                             await e.Message.Edit("Note Successfully removed");
                         });
                 });
-            /*Discord.GetService<CommandService>().CreateCommand("eyes")
-                .Parameter("times")
-                .Do(async (e) =>
-                {
-                    int times = Convert.ToInt32(e.GetArg("times"));
-                    for (int i = times; i > 0; i--)
-                    {
-                        await e.Message.Edit(":eyes:");
-                        await Task.Delay(TimeSpan.FromSeconds(1));
-                        await e.Message.Edit(":eyesFlipped:");
-                        await Task.Delay(TimeSpan.FromSeconds(1));
-                    }
-
-                });*/
             Discord.GetService<CommandService>().CreateCommand("short")
                 .Description("Allows user to store strings and use them at a later date")
                 .Alias("s")
@@ -329,7 +307,7 @@ namespace CortanaSelfBot
                         string message = "```\n";
                         foreach (string key in shortstring.Keys)
                         {
-                            if (i % 4 == 0&& i != 0) message += key + "\n";
+                            if (i % 4 == 0 && i != 0) message += key + "\n";
                             else
                             {
                                 message += key;
@@ -377,8 +355,8 @@ namespace CortanaSelfBot
                 .Parameter("name", ParameterType.Unparsed)
                 .Do(async (e) =>
                 {
-                    var role = e.Server.FindRoles(e.GetArg("name"), exactMatch:false).FirstOrDefault();
-                    await e.Message.Edit($"Provided role `{e.GetArg("name")}` best matches `{role.Name}`(`{role.Id}`)"+
+                    var role = e.Server.FindRoles(e.GetArg("name"), exactMatch: false).FirstOrDefault();
+                    await e.Message.Edit($"Provided role `{e.GetArg("name")}` best matches `{role.Name}`(`{role.Id}`)" +
                                          $"\nMembers: {role.Members.Count()} \nColor: {role.Color}");
                 });
             Discord.GetService<CommandService>()
@@ -407,7 +385,7 @@ namespace CortanaSelfBot
                     string msg = "http://lmgtfy.com/?q=";
                     foreach (char c in phrase)
                     {
-                        if(char.IsLetterOrDigit(c))
+                        if (char.IsLetterOrDigit(c))
                         {
                             msg += c;
                         }
@@ -427,13 +405,18 @@ namespace CortanaSelfBot
                     {
                         client.DownloadFile(u.AvatarUrl, $"temp/{u.AvatarId}.png");
                     }
-                    using( System.IO.Stream stream = new System.IO.FileStream($"temp/{u.AvatarId}.png", System.IO.FileMode.Open, System.IO.FileAccess.Read) )
+                    using (System.IO.Stream stream = new System.IO.FileStream($"temp/{u.AvatarId}.png", System.IO.FileMode.Open, System.IO.FileAccess.Read))
                     {
                         await e.Message.Client.CurrentUser.Edit(avatar: stream, avatarType: ImageType.Png);
                         stream.Close();
                         stream.Dispose();
                     }
                     File.Delete($"temp/{u.AvatarId}.png");
+                    int fCount = Directory.GetFiles("temp/", $"{u.Name}*", SearchOption.AllDirectories).Length;
+                    using (var client = new WebClient())
+                    {
+                        client.DownloadFile(u.AvatarUrl, $"temp/{u.Name}_{fCount + 1}.png");
+                    }
                 });
 
             Discord.GetService<CommandService>().CreateCommand("Avatar")
@@ -460,7 +443,7 @@ namespace CortanaSelfBot
 
             Discord.GetService<CommandService>().CreateGroup("cache", cgb =>
             {
-                cgb.CreateCommand("info")
+                cgb.CreateCommand("info").Description("Displays info about the cache")
                     .Do(async (e) =>
                     {
                         TimeSpan thisMessage = TimeSpan.FromMilliseconds(
@@ -470,27 +453,29 @@ namespace CortanaSelfBot
                                                       62135596800000);
                         var messageAge = thisMessage - firstMessage;
 
-                        await e.Message.Edit($"Max cache size: `{cachesize}`\n`{messageCache.Count}` messages in cache " +
+                        await e.Message.Edit($"Max cache age: `{cachesize} minutes`\n`{messageCache.Count}` messages in cache " +
                                              $"\nCache age: {messageAge}");
 
                     });
-                cgb.CreateCommand("clear")
+                cgb.CreateCommand("clear").Description("Removes all messages from the cache")
                     .Do(async (e) =>
                     {
                         await e.Message.Edit($"Clearing {messageCache.Count} messages from cache");
                         messageCache.Clear();
                     });
-                cgb.CreateCommand("size")
+                cgb.CreateCommand("age")
+                .Description("Lets you set the max age of the cache in minutes")
                     .Parameter("size")
                     .Do(async (e) =>
                     {
                         int oldSize = cachesize;
                         cachesize = Convert.ToInt32(e.GetArg("size"));
-                        await e.Message.Edit($"Cache size changed from `{oldSize}` to `{cachesize}`");
+                        await e.Message.Edit($"Cache size changed from `{oldSize}` to `{cachesize}` minutes");
                     });
             });
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+//Disabled because no API calls are made so it can run ASYNC all the way
             Discord.MessageReceived += (async (s, m) =>
             {
                 try
@@ -557,61 +542,68 @@ namespace CortanaSelfBot
                 {
                     if ((m.Channel.IsPrivate || logServers.Contains(m.Server.Id.ToString()))
                         && m.Before.RawText != m.After.RawText
-                        && !m.User.IsBot)
-                    {
-                        Console.WriteLine("---------MESSAGE EDITED------------");
+                        && !m.User.IsBot 
+						&& m.User.Id != 169918990313848832)
+                        {
+                        string msg = "";
+                        msg += ("---------MESSAGE EDITED------------\n");
                         try
                         {
-                            Console.WriteLine(m.Server.Name + " " + m.Channel.Name);
+                            msg += (m.Server.Name + " " + m.Channel.Name + "\n");
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine("PM: " + m.Channel.Name);
+                            msg += ("PM: " + m.Channel.Name + "\n");
                         }
                         try
                         {
-                            Console.WriteLine(m.User.Name + m.User.Id);
+                            msg += (m.User.Name + m.User.Id + "\n");
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine("User not found");
+                            msg += ("User not found" + "\n");
                         }
-                        Console.WriteLine(m.Before.RawText);
-                        Console.WriteLine(m.After.RawText);
+                        msg += (m.Before.RawText + "\n");
+                        msg += (m.After.RawText + "\n");
+                        Console.WriteLine(msg);
+                        File.AppendAllText("msglog.txt", msg);
                     }
+
                 }
                 catch (Exception ex)
                 {
                 }
             });
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
             Discord.MessageDeleted += (async (s, m) =>
             {
                 try
                 {
                     if (m.Channel.IsPrivate || logServers.Contains(m.Server.Id.ToString())
-                        && !m.User.IsBot)
+                        && !m.User.IsBot
+						&& m.User.Id != 169918990313848832)
                     {
-                        Console.WriteLine("---------MESSAGE DELETED------------");
+                        string msg = "";
+                        Console.WriteLine("---------MESSAGE DELETED------------" + "\n");
                         try
                         {
-                            Console.WriteLine(m.Server.Name + " " + m.Channel.Name);
+                            msg += (m.Server.Name + " " + m.Channel.Name + "\n");
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine("PM: " + m.Channel.Name);
+                            msg += ("PM: " + m.Channel.Name + "\n");
                         }
                         try
                         {
                             Message thisMsg = messageCache[m.Message.Id];
-                            Console.WriteLine(thisMsg.User.Name + thisMsg.User.Id);
+                            msg += (thisMsg.User.Name + thisMsg.User.Id + "\n");
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine("User not found");
+                            msg += ("User not found" + "\n");
                         }
-                        Console.WriteLine(m.Message.RawText);
+                        msg += (m.Message.RawText);
+                        Console.WriteLine(msg);
+                        File.AppendAllText("msglog.txt", msg);
                     }
                 }
                 catch (Exception ex)
@@ -620,19 +612,17 @@ namespace CortanaSelfBot
             });
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
-
-
-
-            Discord.ExecuteAndWait(async () =>{
+            Discord.ExecuteAndWait(async () =>
+            {
                 await Discord.Connect(config.Token(), TokenType.User);
-                await Task.Delay(1000);
-
+                Console.WriteLine("Connected as: " + Discord.CurrentUser.Name + " (" + Discord.CurrentUser.ID + ")");
+                Console.WriteLine("Maxiumum Cache Age: " + config.CacheSize() + "minutes");
             });
         }
 
         public void Log(object sender, LogMessageEventArgs e)
         {
-            if (e.Message.Contains("CHUNK")) Console.WriteLine(DateTime.Now + ": " + e.Message);
+            //if (e.Message.Contains("CHUNK")) Console.WriteLine(DateTime.Now + ": " + e.Message);
             if (e.Message.ToLower().Contains("connect")) Console.WriteLine(DateTime.Now + ": " + e.Message);
         }
 
