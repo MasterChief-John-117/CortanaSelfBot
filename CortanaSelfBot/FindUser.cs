@@ -29,7 +29,6 @@ namespace CortanaSelfBot
             {
                 if (!String.IsNullOrEmpty(user.Nickname) && Regex.IsMatch(user.Nickname, rgx, RegexOptions.IgnoreCase))
                 {
-                    Console.WriteLine(user.Name);
                     count++;
                     if (count < 25 && !ids.Contains(user.Id))
                     {
@@ -39,7 +38,6 @@ namespace CortanaSelfBot
                 }
                 if (!String.IsNullOrEmpty(user.Name) && Regex.IsMatch(user.Name, rgx, RegexOptions.IgnoreCase))
                 {
-                    Console.WriteLine(user.Name);
                     count++;
                     if (count < 25 && !ids.Contains(user.Id))
                     {
