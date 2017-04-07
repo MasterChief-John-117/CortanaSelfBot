@@ -487,7 +487,7 @@ namespace CortanaSelfBot
                                                   62135596800000);
                     var messageAge = thisMessage - firstMessage;
                     double minuteAge = messageAge.TotalSeconds;
-                    while (minuteAge > cachesize * 60 || messageCache > 5000)
+                    while (minuteAge > cachesize * 60 || messageCache.Count > 5000)
                     {
                         messageCache.Remove(messageCache.Min(x => x.Key));
                         thisMessage = TimeSpan.FromMilliseconds(
@@ -502,11 +502,15 @@ namespace CortanaSelfBot
                 catch (Exception ex)
                 {
                 }
-
-                messageCache.Add(m.Message.Id, m.Message);
+                if ((m.Channel.IsPrivate || logServers.Contains(m.Server.Id.ToString()))
+                        && !m.User.IsBot
+                        && m.User.Id != 169918990313848832)
+                {
+                    messageCache.Add(m.Message.Id, m.Message);
+                }
 
             });
-            Discord.MessageUpdated += (async (s, m) =>
+            Discord.MessageUpdated += (async (s, m) => // edit cacheing
             {
                 try
                 {
@@ -532,11 +536,17 @@ namespace CortanaSelfBot
                 catch (Exception ex)
                 {
                 }
-                messageCache.Remove(m.After.Id);
-                messageCache.Add(m.After.Id, m.After);
+                if ((m.Channel.IsPrivate || logServers.Contains(m.Server.Id.ToString()))
+                        && m.Before.RawText != m.After.RawText
+                        && !m.User.IsBot
+                        && m.User.Id != 169918990313848832)
+                {
+                    messageCache.Remove(m.After.Id);
+                    messageCache.Add(m.After.Id, m.After);
+                }
 
             });
-            Discord.MessageUpdated += (async (s, m) =>
+            Discord.MessageUpdated += (async (s, m) =>  //logging edits
             {
                 try
                 {
@@ -574,13 +584,13 @@ namespace CortanaSelfBot
                 {
                 }
             });
-            Discord.MessageDeleted += (async (s, m) =>
+            Discord.MessageDeleted += (async (s, m) =>  //Logging deleted messages
             {
                 try
                 {
-                    if (m.Channel.IsPrivate || logServers.Contains(m.Server.Id.ToString())
-                        && !m.User.IsBot
-						&& m.User.Id != 169918990313848832)
+                    if (m.Channel.IsPrivate || logServers.Contains(m.Server.Id.ToString()) 
+                        && !m.User.IsBot  
+						&& m.User.Id != 169918990313848832)  
                     {
                         string msg = "";
                         Console.WriteLine("---------MESSAGE DELETED------------" + "\n");
@@ -594,8 +604,8 @@ namespace CortanaSelfBot
                         }
                         try
                         {
-                            Message thisMsg = messageCache[m.Message.Id];
-                            msg += (thisMsg.User.Name + thisMsg.User.Id + "\n");
+                            Message thisMsg = messageCache[m.Message.Id];  
+                            msg += (thisMsg.User.Name + " : " + thisMsg.User.Id + "\n");  
                         }
                         catch (Exception ex)
                         {
