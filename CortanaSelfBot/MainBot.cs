@@ -193,7 +193,7 @@ namespace CortanaSelfBot
                         allroles = allroles.Substring(0, allroles.Length - 13); //trims out "@everyone"
                     }
                     else allroles = "Not On Server";
-                    TimeSpan userCreatedAt = TimeSpan.FromMilliseconds(((id / 4194304) + 1420070400000) + 62135596800000);
+                    TimeSpan userCreatedAt = TimeSpan.FromMilliseconds(((user.Id / 4194304) + 1420070400000) + 62135596800000);
                     DateTime zero = new DateTime(0001, 01, 01, 00, 00, 00, 00);
                     var newUser = zero + userCreatedAt;
                     string discrim = "0000" + user.Discriminator.ToString();
@@ -223,7 +223,7 @@ namespace CortanaSelfBot
                     Server srv = e.Server;
                     string message = "```\n";
                     var features = srv.Features.Any();
-                    string discrim = "0000" + user.Discriminator.ToString();
+                    string discrim = "0000" + srv.Owner.Discriminator.ToString();
 					discrim = discrim.Substring(discrim.Length - 4); 
 					TimeSpan srvCreatedAt = TimeSpan.FromMilliseconds(((srv.Id / 4194304) + 1420070400000) + 62135596800000);
                     DateTime zero = new DateTime(0001, 01, 01, 00, 00, 00, 00);
@@ -625,7 +625,7 @@ namespace CortanaSelfBot
             Discord.ExecuteAndWait(async () =>
             {
                 await Discord.Connect(config.Token(), TokenType.User);
-                Console.WriteLine("Connected as: " + Discord.CurrentUser.Name + " (" + Discord.CurrentUser.ID + ")");
+                Console.WriteLine("Connected as: " + Discord.CurrentUser.Name + " (" + Discord.CurrentUser.Id + ")");
                 Console.WriteLine("Maxiumum Cache Age: " + config.CacheSize() + "minutes");
             });
         }
