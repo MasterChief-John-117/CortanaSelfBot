@@ -216,7 +216,18 @@ namespace CortanaSelfBot
                     message += "\n```";
                     await e.Message.Edit(message);
                 });
-            Discord.GetService<CommandService>().CreateCommand("server")
+            Discord.GetService<CommandService>().CreateCommand("pmUser")
+                .Description("PM's a user")
+                .Parameter("user").Parameter("message", ParameterType.Unparsed)
+                .Do(async (e) =>
+                {
+                    User u = util.GetUsers(e).FirstOrDefault();
+                    await u.SendMessage(e.GetArg("message"));
+                    await e.Message.Edit($"Sent {e.GetArg("message")} to {u.Name}");
+                    await Task.Delay(2000);
+                    await e.Message.Delete();
+                });
+                Discord.GetService<CommandService>().CreateCommand("server")
                 .Description("Returns information on the server the command is used in")
                 .Do(async (e) =>
                 {
