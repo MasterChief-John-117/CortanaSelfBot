@@ -31,23 +31,21 @@ namespace CortanaSelfBot
                 {
                     Console.WriteLine(user.Name);
                     count++;
-                    if (count < 25 && !names.Contains(user.Name))
+                    if (count < 25 && !ids.Contains(user.Id))
                     {
-                        names.AddFirst(user.Name);
+                        ids.AddFirst(user.Id);
                         people += user.Name + " (" + user.Nickname + ") : `" + user.Id.ToString() + "`\n";
                     }
-                    ids.AddFirst(user.Id);
                 }
                 if (!String.IsNullOrEmpty(user.Name) && Regex.IsMatch(user.Name, rgx, RegexOptions.IgnoreCase))
                 {
                     Console.WriteLine(user.Name);
                     count++;
-                    if (count < 25 && !names.Contains(user.Name))
+                    if (count < 25 && !ids.Contains(user.Id))
                     {
-                        names.AddFirst(user.Name);
+                        ids.AddFirst(user.Id);
                         people += user.Name + ": `" + user.Id.ToString() + "`\n";
                     }
-                    ids.AddFirst(user.Id);
                 }
             }
             if (count > 20)
